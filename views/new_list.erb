@@ -1,3 +1,9 @@
+<% if session[:error] %>
+  <div class="flash error">
+    <p><%= session.delete(:error)%></p>
+  </div>
+<% end %>
+
 <form action="/lists" method="post">
   <dl>
     <dt>
