@@ -3,12 +3,17 @@ GEM
   specs:
     ast (2.4.0)
     backports (3.6.8)
+    coderay (1.1.2)
     erubis (2.7.0)
     jaro_winkler (1.5.3)
+    method_source (0.9.2)
     multi_json (1.12.1)
     parallel (1.18.0)
     parser (2.6.5.0)
       ast (~> 2.4.0)
+    pry (0.12.2)
+      coderay (~> 1.1.0)
+      method_source (~> 0.9.0)
     rack (1.6.4)
     rack-protection (1.5.3)
       rack
@@ -42,6 +47,7 @@ PLATFORMS
 
 DEPENDENCIES
   erubis
+  pry
   rubocop
   sinatra (~> 1.4.7)
   sinatra-contrib
