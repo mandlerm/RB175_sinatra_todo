@@ -24,8 +24,8 @@ end
 
 get "/lists/:id" do
   number = params[:id].to_i
-  @list_name = session[:lists].fetch(number)
-  erb :single_list, layout: :layout
+  @list = session[:lists].fetch(number)
+  erb :list, layout: :layout
 end
 
 # Render new list form
