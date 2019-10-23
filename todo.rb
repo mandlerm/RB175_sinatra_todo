@@ -30,15 +30,15 @@ end
 
 # Display a single ToDo
 get "/lists/:id" do
-  id = params[:id].to_i
-  @list = session[:lists].fetch(id)
+  @list_id = params[:id].to_i
+  @list = session[:lists].fetch(@list_id)
   erb :list, layout: :layout
 end
 
 # Edit an existing todo list
 get "/lists/:id/edit" do
-  id = params[:id].to_i
-  @list = session[:lists].fetch(id)
+  @list_id = params[:id].to_i
+  @list = session[:lists].fetch(@list_id)
   erb :edit_list, layout: :layout
 end
 
@@ -59,25 +59,73 @@ end
 
 # Delete a todo list
 post '/lists/:id/destroy' do
-  id = params[:id].to_i
-  session[:lists].delete_at(id)
+  @list_id = params[:id].to_i
+  session[:lists].delete_at(@list_id)
   session[:success] = "The list has been deleted."
   redirect "/lists"
 end
 
 # Add an item to a todo
-post '/lists/:id/todos' do
-  id = params[:id].to_i
-  @list = session[:lists].fetch(id)
-  @list[:todos] << params[:todo]
-  redirect "/lists/#{id}"
+post '/lists/:list_id/todos' do
+  @list_id = params[:list_id].to_i
+  @list = session[:lists].fetch(@list_id)
+  text = params[:todo].strip
+
+  error = error_for_todo(text)
+  if error
+     session[:error] = error
+     erb :list, layout: :layout
+  else
+    @list[:todos] << { name: text, completed: false }
+    session[:success] = "The todo added."
+    redirect "/lists/#{@list_id}"
+  end
+end
+
+# delete a specific todo item from a list
+post '/lists/:list_id/todos/:id/destroy/' do
+  @list_id = params[:list_id].to_i
+  @list = session[:lists].fetch(@list_id)
+
+  todo_id = params[:id].to_i
+  @list[:todos].delete_at(todo_id)
+  session[:success] = "The todo has been deleted."
+
+  redirect "/lists/#{@list_id}"
+end
+
+# Update status of a todo
+post '/lists/:list_id/todos/:id/' do
+  @list_id = params[:list_id].to_i
+  @list = session[:lists].fetch(@list_id)
+
+  todo_id = params[:id].to_i
+  is_completed = params[:completed] == "true"
+  @list[:todos][todo_id][:completed] = is_completed
+  session[:success] = "The todo has been updated."
+
+  redirect "/lists/#{@list_id}"
+end
+
+# Mark all todos for a specific list as complete
+post '/lists/:list_id/complete_all' do
+  @list_id = params[:list_id].to_i
+  @list = session[:lists].fetch(@list_id)
+
+  @list[:todos].map do |item|
+    item[:completed] = true
+  end
+
+  session[:success] = "This list has been updated."
+
+  redirect "/lists/#{@list_id}"
 end
 
 # Update an existing todo list
 post "/lists/:id" do
   list_name = params[:list_name].strip
-  id = params[:id].to_i
-  @list = session[:lists].fetch(id)
+  @list_id = params[:id].to_i
+  @list = session[:lists].fetch(@list_id)
 
   error = error_for_list_name(list_name)
   if error
@@ -86,7 +134,7 @@ post "/lists/:id" do
   else
     @list[:name] = list_name
     session[:success] = "The list has been updated."
-    redirect "/lists/#{id}"
+    redirect "/lists/#{@list_id}"
   end
 end
 
@@ -97,5 +145,12 @@ def error_for_list_name(name)
     session[:error] = "List name must be between 1 and 100 characters"
   elsif session[:lists].any? { |list| list[:name] == name }
     session[:error] = "List name must be unique"
+  end
+end
+
+# Return an error message if new list item is invalid. Return nil if name is valid.
+def error_for_todo(name)
+  if !(1..100).cover?(name.size)
+    "Todo must be between 1 and 100 characters"
   end
 end
