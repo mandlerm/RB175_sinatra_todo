@@ -13,6 +13,32 @@ before do
   session[:lists] ||= []
 end
 
+helpers do
+  #is_complete?  return boolean if entire list is done
+  def is_complete?(id)
+
+    list_id = id.to_i
+    list = session[:lists].fetch(list_id)
+
+    list[:todos].all? do |item|
+      item[:completed] == true
+    end
+  end
+
+  #tasks complete  return total tasks marked complete
+  def tasks_complete(id)
+
+    list_id = id.to_i
+    list = session[:lists].fetch(list_id)
+
+    completed = list[:todos].select do |item|
+      item[:completed] == true
+    end.count
+  end
+
+end
+
+
 get "/" do
   redirect "/lists"
 end
@@ -112,7 +138,7 @@ post '/lists/:list_id/complete_all' do
   @list_id = params[:list_id].to_i
   @list = session[:lists].fetch(@list_id)
 
-  @list[:todos].map do |item|
+  @list[:todos].each do |item|
     item[:completed] = true
   end
 
