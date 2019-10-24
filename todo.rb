@@ -9,35 +9,37 @@ configure do
   set :session_secret, 'secret'
 end
 
-before do
-  session[:lists] ||= []
-end
-
 helpers do
   #is_complete?  return boolean if entire list is done
-  def is_complete?(id)
+  def is_complete?(list)
 
-    list_id = id.to_i
-    list = session[:lists].fetch(list_id)
-
-    list[:todos].all? do |item|
-      item[:completed] == true
+    # list_id = id.to_i
+    # list = session[:lists].fetch(list_id)
+    if list[:todos].size == 0
+      false
+    else
+      list[:todos].all? do |item|
+        item[:completed] == true
+      end
     end
   end
 
   #tasks complete  return total tasks marked complete
-  def tasks_complete(id)
-
-    list_id = id.to_i
-    list = session[:lists].fetch(list_id)
-
+  def tasks_complete?(list)
     completed = list[:todos].select do |item|
       item[:completed] == true
     end.count
   end
 
+  def list_class(list)
+    "complete" if is_complete?(list)
+  end
+
 end
 
+before do
+  session[:lists] ||= []
+end
 
 get "/" do
   redirect "/lists"
