@@ -1,5 +1,5 @@
 require "sinatra"
-require "sinatra/reloader"
+require "sinatra/reloader" if development?
 require "sinatra/content_for"
 require "tilt/erubis"
 require 'pry'
@@ -12,7 +12,6 @@ end
 helpers do
   #is_complete?  return boolean if entire list is done
   def is_complete?(list)
-
     # list_id = id.to_i
     # list = session[:lists].fetch(list_id)
     if list[:todos].size == 0
@@ -25,16 +24,43 @@ helpers do
   end
 
   #tasks complete  return total tasks marked complete
-  def tasks_complete?(list)
+  def tasks_complete(list)
     completed = list[:todos].select do |item|
       item[:completed] == true
-    end.count
+    end.size
   end
 
+  # determine proper class for display in view
   def list_class(list)
     "complete" if is_complete?(list)
   end
 
+  # Sort display order of todo Lists
+  def list_sort(lists, &block)
+    incomplete_lists = {}
+    complete_lists = {}
+
+    complete_lists, incomplete_lists = lists.partition {|list| is_complete?(list)}
+
+    incomplete_lists.each { |list| yield list, lists.index(list) }
+    complete_lists.each { |list| yield list, lists.index(list) }
+  end
+
+  def todo_sort(todos, &block)
+    incomplete_todos = {}
+    complete_todos = {}
+
+    todos.each_with_index do |todo, index|
+      if todo[:completed]
+        complete_todos[index] = todo
+      else
+        incomplete_todos[index] = todo
+      end
+    end
+
+    incomplete_todos.each { |id, todo| yield todo, id }
+    complete_todos.each { |id, todo| yield todo, id }
+  end
 end
 
 before do
